@@ -1,0 +1,50 @@
+﻿volumes:
+  visit_count_db:
+
+services:
+  visitcountimagegenerator:
+    user: root
+    container_name: "visit-count-generator"
+    hostname: "visit-count"
+    image: visit-count-generator
+    build:
+      context: .
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.visitcount.rule=Host(`madrasacloud.com`)"
+      - "traefik.http.routers.visitcount.entrypoints=visitcount"
+      - "traefik.http.routers.visitcount.tls.certresolver=visitcountresolver"
+    networks:
+      - reverse_proxy_network
+    expose:
+      - 80
+    environment:
+      ASPNETCORE_URLS: "http://*:80"
+      ConnectionString: "Filename=/data/database.db;Connection=direct"
+    volumes:
+      - visit_count_db:/data/
+
+
+#  reverseproxy:
+##    networks:
+##      - reverse_proxy_network
+#    image: "traefik:v3.1"
+#    container_name: "traefik"
+#    command:
+#      - "--api.insecure=true"
+#      - "--providers.docker=true"
+#      - "--providers.docker.exposedbydefault=false"
+#      - "--entryPoints.web.address=:80"
+#      - "--entryPoints.visitcount.address=:449"
+#      - "--certificatesresolvers.visitcountresolve.acme.httpchallenge=true"
+#      - "--certificatesresolvers.visitcountresolve.acme.httpchallenge.entrypoint=web"
+#      - "--certificatesresolvers.visitcountresolve.acme.email=rainxh11@gmail.com"
+#      - "--certificatesresolvers.visitcountresolve.acme.storage=/letsencrypt/acme.json"
+#    ports:
+#      - 80:80
+#      - 443:443
+#      - 449:449
+#    volumes:
+#      - "lets_encrypt:/letsencrypt"
+#      - "/var/run/docker.sock:/var/run/docker.sock:ro"
