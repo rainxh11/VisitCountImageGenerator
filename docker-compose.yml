@@ -5,7 +5,7 @@ services:
   visit-count-generator:
     container_name: visit-count-generator
     hostname: visit-count
-    image: visit-count-generator
+    image: rainxh11/visit-count-image-generator
     build:
       context: .
       dockerfile: Dockerfile

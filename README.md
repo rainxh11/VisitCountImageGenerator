@@ -19,11 +19,13 @@ Configuration uses environment variables:
 
 ## Docker
 
+Public Docker Hub image: [rainxh11/visit-count-image-generator](https://hub.docker.com/r/rainxh11/visit-count-image-generator).
+
 ```sh
 docker compose up --build -d
 ```
 
-The multi-stage Dockerfile uses cargo-chef prepare/cook stages to cache dependencies and runs the executable as an unprivileged user. Compose exposes port 8000 to the Docker network; add a port mapping such as `8000:8000` when direct host access is needed. The `visit_count_db` volume persists SQLite and its WAL files under `/data`.
+The Docker image is named `rainxh11/visit-count-image-generator` (`latest` by default). The multi-stage Dockerfile uses a musl-based Alpine builder and cargo-chef prepare/cook stages to cache dependencies, with a BuildKit cache for downloaded crates. The final `scratch` image contains only the static executable (including SQLite, PNG, and font assets) and writable data/temp directories, running as UID/GID 10001. It has no shell or package manager. Release builds optimize for size with full LTO, one codegen unit, stripped symbols, and abort-on-panic; these settings trade compilation time and some runtime throughput for a smaller binary. Compose exposes port 8000 to the Docker network; add a port mapping such as `8000:8000` when direct host access is needed. The `visit_count_db` volume persists SQLite and its WAL files under `/data`.
 
 SQLite uses `/data/visits.sqlite3`, separate from the old LiteDB `/data/database.db`. Existing LiteDB records are not imported automatically. Keep the old file if historical data is needed.
 

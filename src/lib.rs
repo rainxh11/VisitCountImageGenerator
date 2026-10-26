@@ -262,7 +262,7 @@ async fn generate(
         .map(|(key, value)| format!("[{}, {}]", key, value.to_str().unwrap_or_default()))
         .collect();
     let query: std::collections::BTreeSet<_> =
-        url::form_urlencoded::parse(uri.query().unwrap_or_default().as_bytes())
+        form_urlencoded::parse(uri.query().unwrap_or_default().as_bytes())
             .map(|(key, _)| key.into_owned())
             .collect();
     let request = json!({"Cookies": cookies, "Headers": request_headers, "Host": headers.get(header::HOST).and_then(|v| v.to_str().ok()).unwrap_or_default(), "Query": query, "Path": uri.path()});
