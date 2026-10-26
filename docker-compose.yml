@@ -1,18 +1,18 @@
-﻿volumes:
+volumes:
   visit_count_db:
 
 services:
   visit-count-generator:
-    container_name: "visit-count-generator"
-    hostname: "visit-count"
+    container_name: visit-count-generator
+    hostname: visit-count
     image: visit-count-generator
     build:
       context: .
       dockerfile: Dockerfile
     expose:
-      - 8000
+      - "8000"
     environment:
-      ASPNETCORE_URLS: "http://*:8000"
-      ConnectionString: "Filename=/data/database.db;Connection=direct"
+      BIND_ADDRESS: "0.0.0.0:8000"
+      DATABASE_PATH: "/data/visits.sqlite3"
     volumes:
-      - visit_count_db:/data/
+      - visit_count_db:/data

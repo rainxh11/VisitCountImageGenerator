@@ -1,0 +1,20 @@
+[package]
+name = "visit-count-generator"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ab_glyph = "0.2"
+axum = "0.8"
+chrono = { version = "0.4", features = ["serde"] }
+image = { version = "0.25", default-features = false, features = ["png"] }
+imageproc = { version = "0.25", default-features = false }
+rusqlite = { version = "0.37", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "signal"] }
+url = "2"
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }
+tempfile = "3"

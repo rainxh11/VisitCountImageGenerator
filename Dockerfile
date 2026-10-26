@@ -1,22 +1,26 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+FROM rust:1.99.1-bookworm AS chef
+RUN cargo install cargo-chef --locked
 WORKDIR /app
-RUN mkdir -p /data && chown $APP_UID:$APP_UID /data
-USER $APP_UID
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["VisitCountImageGenerator.csproj", "./"]
-RUN dotnet restore "VisitCountImageGenerator.csproj"
-COPY . .
-WORKDIR "/src/"
-RUN dotnet build "VisitCountImageGenerator.csproj" -c $BUILD_CONFIGURATION -o /app/build
+FROM chef AS planner
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+RUN cargo chef prepare --recipe-path recipe.json
 
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "VisitCountImageGenerator.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+FROM chef AS builder
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --locked --recipe-path recipe.json
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+COPY Caskaydia.otf VisitCount.png ./
+RUN cargo build --release --locked --bin visit-count-generator
 
-FROM base AS final
+FROM debian:bookworm-slim AS runtime
+RUN groupadd --gid 10001 app && useradd --uid 10001 --gid app --no-create-home app \
+    && mkdir /data && chown app:app /data
 WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "VisitCountSvg.dll"]
+COPY --from=builder /app/target/release/visit-count-generator /app/visit-count-generator
+ENV BIND_ADDRESS=0.0.0.0:8000 DATABASE_PATH=/data/visits.sqlite3
+USER app
+EXPOSE 8000
+ENTRYPOINT ["/app/visit-count-generator"]
